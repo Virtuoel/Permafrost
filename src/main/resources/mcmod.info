@@ -1,0 +1,16 @@
+[
+	{
+		"modid": "permafrost",
+		"name": "Permafrost",
+		"description": "Prevents light from melting Ice and Snow Layers",
+		"version": "${version}",
+		"mcversion": "${mcversion}",
+		"url": "",
+		"updateUrl": "",
+		"authorList": ["Virtuoel"],
+		"credits": "",
+		"logoFile": "",
+		"screenshots": [],
+		"dependencies": []
+	}
+]

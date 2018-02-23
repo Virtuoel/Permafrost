@@ -1,0 +1,265 @@
+buildscript {
+	repositories {
+		jcenter()
+		maven {
+			url = "http://files.minecraftforge.net/maven"
+		}
+	}
+	dependencies {
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+	}
+}
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven'
+
+repositories {
+	maven {
+		name = "CurseForge"
+		url = "https://minecraft.curseforge.com/api/maven/"
+	}
+	maven {
+		name = "JitPack"
+		url = "https://jitpack.io"
+	}
+}
+
+version = "${mc_version}-${version_major}.${version_minor}.${version_patch}.${version_revision}"
+group = "virtuoel.${mod_id}"
+archivesBaseName = "${mod_name}"
+
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+compileJava {
+	sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+minecraft {
+	version = "${mc_version}-${forge_version}"
+	runDir = "run"
+	mappings = "${mcp_mappings}"
+	useDepAts = true
+	makeObfSourceJar = true
+	
+	replace '@VERSION@', project.version
+	
+	replace '@FINGERPRINT@', project.findProperty('signSHA1')
+	replaceIn "virtuoel/${mod_id}/${mod_class}.java"
+	
+	clientJvmArgs += "-Dfml.coreMods.load=virtuoel.${mod_id}.asm.LoadingPlugin"
+	serverJvmArgs += "-Dfml.coreMods.load=virtuoel.${mod_id}.asm.LoadingPlugin"
+	serverJvmArgs += "-Dfml.queryResult=confirm"
+}
+
+dependencies {
+	
+}
+
+compileJava {
+	options.encoding = 'UTF-8'
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+	allprojects {
+		tasks.withType(Javadoc) {
+			options.addStringOption('Xdoclint:none', '-quiet')
+		}
+	}
+}
+/*
+// API jar
+task apiJar(type: Jar) {
+	from sourceSets.main.output
+	from sourceSets.main.allJava
+	include "virtuoel/${mod_id}/api/**"
+	manifest.mainAttributes(
+			"Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
+			"Implementation-Title": project.name + '-api',
+			"Implementation-Version": project.version,
+			"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:api",
+			"Built-On": "${mc_version}-${forge_version}"
+	)
+	classifier = 'api'
+}
+*/
+// Javadoc jar
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	from javadoc.destinationDir
+	manifest.mainAttributes(
+		"Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
+		"Implementation-Title": project.name + '-javadoc',
+		"Implementation-Version": project.version,
+		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:javadoc",
+		"Built-On": "${mc_version}-${forge_version}"
+	)
+	classifier = 'javadoc'
+}
+
+task deobfJar(type: Jar) {
+	from sourceSets.main.output
+	manifest.mainAttributes(
+		"Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
+		"Implementation-Title": project.name + '-deobf',
+		"Implementation-Version": project.version,
+		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:deobf",
+		"Built-On": "${mc_version}-${forge_version}",
+		"FMLAT": "${project.mod_name}_at.cfg"
+	)
+	classifier = 'deobf'
+}
+
+task signDeobfJar(type: SignJar) {
+	onlyIf {
+		project.hasProperty('keyStore')
+	}
+	
+	keyStore = project.findProperty('keyStore')
+	alias = project.findProperty('keyStoreAlias')
+	storePass = project.findProperty('keyStorePass')
+	keyPass = project.findProperty('keyStoreKeyPass')
+
+	inputFile = deobfJar.archivePath
+	outputFile = deobfJar.archivePath
+}
+
+task coreJar(type: Jar) {
+	from(sourceSets.main.output) {
+		include "virtuoel/${mod_id}/asm/**"
+	}
+	manifest.mainAttributes(
+		"Implementation-Title": project.name + "-corePlugin",
+		"Implementation-Version": "${project.version}",
+		"Built-On": "${project.mc_version}-${project.forge_version}",
+		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
+	)
+	classifier 'corePlugin'
+	group = 'build'
+}
+
+reobf {
+	coreJar {
+		mappingType = 'SEARGE'
+	}
+}
+
+task signCoreJar(type: SignJar) {
+	onlyIf {
+		project.hasProperty('keyStore')
+	}
+	
+	keyStore = project.findProperty('keyStore')
+	alias = project.findProperty('keyStoreAlias')
+	storePass = project.findProperty('keyStorePass')
+	keyPass = project.findProperty('keyStoreKeyPass')
+
+	inputFile = coreJar.archivePath
+	outputFile = coreJar.archivePath
+	dependsOn reobfCoreJar
+}
+
+jar {
+	dependsOn signCoreJar
+	from(coreJar.archivePath.absolutePath) {
+		include '*'
+	}
+	exclude "virtuoel/${mod_id}/asm/**"
+	manifest.mainAttributes(
+		"Implementation-Title": project.name,
+		"Implementation-Version": "${project.version}",
+		"Built-On": "${project.mc_version}-${project.forge_version}",
+		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}",
+		"FMLAT": "${project.mod_name}_at.cfg",
+		"ContainedDeps": coreJar.archivePath.name
+	)
+	classifier '' //this is the main jar!
+}
+
+task signJar(type: SignJar, dependsOn: reobfJar) {
+	onlyIf {
+		project.hasProperty('keyStore')
+	}
+	
+	keyStore = project.findProperty('keyStore')
+	alias = project.findProperty('keyStoreAlias')
+	storePass = project.findProperty('keyStorePass')
+	keyPass = project.findProperty('keyStoreKeyPass')
+	
+	inputFile = jar.archivePath
+	outputFile = jar.archivePath
+}
+
+artifacts {
+//	archives apiJar
+	archives deobfJar
+	archives javadocJar
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir 'src/main/java'
+		}
+		resources {
+			srcDir 'src/main/resources'
+		}
+	}
+}
+
+def curseRelations = {
+	optionalLibrary 'jei'
+	//optionalLibrary '' //add curseforge-slug here
+}
+
+processResources
+{
+	println "[GRADLE] TASK 1"
+	// this will ensure that this task is redone when the versions change.
+	inputs.property "version", project.version
+	inputs.property "mcversion", project.minecraft.version
+	
+	// replace stuff in mcmod.info, nothing else
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info'
+		
+		// replace version and mcversion
+		expand 'version':project.version, 'mcversion':project.minecraft.version
+	}
+	
+	// copy everything else, thats not the mcmod.info
+	from(sourceSets.main.resources.srcDirs) {
+		exclude 'mcmod.info'		
+	}
+	
+	//ATs
+	rename '(.+_at.cfg)', 'META-INF/$1'
+}
+
+task curseforge {
+	if (project.hasProperty('curse_key'))
+		apiKey = project.curse_key
+	
+	
+	if(project.hasProperty('curse_id')) {
+		project {
+			id = project.curse_id
+		//	changelogType = 'markdown'
+		//	changelog = getChangelogText()
+			releaseType = project.release_type
+			
+			relations curseRelations
+			
+			//no such jars for now
+			//addArtifact javadocJar
+			//addArtifact sourceJar
+			//addArtifact apiJar
+			
+			//addGameVersion '1.12.2' //automatically determined by the CurseGradle plugin
+			
+			mainArtifact(jar) {
+				displayName = "${mod_name} v${project.version} MC${mc_version}"
+			}
+		}
+	}
+}
+
+tasks.build.dependsOn signJar,/* apiJar,*/ signDeobfJar, javadocJar
+
+tasks.curseforge.dependsOn build
