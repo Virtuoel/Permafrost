@@ -30,19 +30,21 @@ archivesBaseName = "${mod_name}"
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
 compileJava {
 	sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+	options.encoding = 'UTF-8'
 }
 
 minecraft {
 	version = "${mc_version}-${forge_version}"
 	runDir = "run"
 	mappings = "${mcp_mappings}"
-	useDepAts = true
 	makeObfSourceJar = true
+	useDepAts = true
 	
 	replace '@VERSION@', project.version
 	
 	replace '@FINGERPRINT@', project.findProperty('signSHA1')
 	replaceIn "virtuoel/${mod_id}/${mod_class}.java"
+	replaceIn "virtuoel/${mod_id}/asm/LoadingPlugin.java"
 	
 	clientJvmArgs += "-Dfml.coreMods.load=virtuoel.${mod_id}.asm.LoadingPlugin"
 	serverJvmArgs += "-Dfml.coreMods.load=virtuoel.${mod_id}.asm.LoadingPlugin"
@@ -53,10 +55,6 @@ dependencies {
 	
 }
 
-compileJava {
-	options.encoding = 'UTF-8'
-}
-
 if (JavaVersion.current().isJava8Compatible()) {
 	allprojects {
 		tasks.withType(Javadoc) {
@@ -64,22 +62,22 @@ if (JavaVersion.current().isJava8Compatible()) {
 		}
 	}
 }
-/*
+
 // API jar
 task apiJar(type: Jar) {
 	from sourceSets.main.output
 	from sourceSets.main.allJava
 	include "virtuoel/${mod_id}/api/**"
 	manifest.mainAttributes(
-			"Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
-			"Implementation-Title": project.name + '-api',
-			"Implementation-Version": project.version,
-			"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:api",
-			"Built-On": "${mc_version}-${forge_version}"
+		"Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
+		"Implementation-Title": project.name + '-api',
+		"Implementation-Version": project.version,
+		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:api",
+		"Built-On": "${mc_version}-${forge_version}"
 	)
 	classifier = 'api'
 }
-*/
+
 // Javadoc jar
 task javadocJar(type: Jar, dependsOn: javadoc) {
 	from javadoc.destinationDir
@@ -101,7 +99,8 @@ task deobfJar(type: Jar) {
 		"Implementation-Version": project.version,
 		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:deobf",
 		"Built-On": "${mc_version}-${forge_version}",
-		"FMLAT": "${project.mod_name}_at.cfg"
+		"FMLAT": "${project.mod_name}_at.cfg",
+		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
 	)
 	classifier = 'deobf'
 }
@@ -115,59 +114,19 @@ task signDeobfJar(type: SignJar) {
 	alias = project.findProperty('keyStoreAlias')
 	storePass = project.findProperty('keyStorePass')
 	keyPass = project.findProperty('keyStoreKeyPass')
-
+	
 	inputFile = deobfJar.archivePath
 	outputFile = deobfJar.archivePath
 }
 
-task coreJar(type: Jar) {
-	from(sourceSets.main.output) {
-		include "virtuoel/${mod_id}/asm/**"
-	}
-	manifest.mainAttributes(
-		"Implementation-Title": project.name + "-corePlugin",
-		"Implementation-Version": "${project.version}",
-		"Built-On": "${project.mc_version}-${project.forge_version}",
-		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
-	)
-	classifier 'corePlugin'
-	group = 'build'
-}
-
-reobf {
-	coreJar {
-		mappingType = 'SEARGE'
-	}
-}
-
-task signCoreJar(type: SignJar) {
-	onlyIf {
-		project.hasProperty('keyStore')
-	}
-	
-	keyStore = project.findProperty('keyStore')
-	alias = project.findProperty('keyStoreAlias')
-	storePass = project.findProperty('keyStorePass')
-	keyPass = project.findProperty('keyStoreKeyPass')
-
-	inputFile = coreJar.archivePath
-	outputFile = coreJar.archivePath
-	dependsOn reobfCoreJar
-}
-
 jar {
-	dependsOn signCoreJar
-	from(coreJar.archivePath.absolutePath) {
-		include '*'
-	}
-	exclude "virtuoel/${mod_id}/asm/**"
 	manifest.mainAttributes(
 		"Implementation-Title": project.name,
 		"Implementation-Version": "${project.version}",
 		"Built-On": "${project.mc_version}-${project.forge_version}",
 		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}",
 		"FMLAT": "${project.mod_name}_at.cfg",
-		"ContainedDeps": coreJar.archivePath.name
+		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
 	)
 	classifier '' //this is the main jar!
 }
@@ -210,7 +169,6 @@ def curseRelations = {
 
 processResources
 {
-	println "[GRADLE] TASK 1"
 	// this will ensure that this task is redone when the versions change.
 	inputs.property "version", project.version
 	inputs.property "mcversion", project.minecraft.version

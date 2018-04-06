@@ -1,37 +1,42 @@
 package virtuoel.permafrost;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.Collections;
+
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 
 import net.minecraft.init.Blocks;
-import net.minecraft.launchwrapper.Launch;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
+import net.minecraftforge.fml.common.DummyModContainer;
+import net.minecraftforge.fml.common.LoadController;
+import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 
-@Mod(modid = Permafrost.MOD_ID, name = Permafrost.MOD_NAME, version = Permafrost.VERSION, acceptableRemoteVersions = "*", certificateFingerprint = "@FINGERPRINT@")
-public class Permafrost
+public class Permafrost extends DummyModContainer
 {
 	public static final String MOD_ID = "permafrost";
 	public static final String MOD_NAME = "Permafrost";
-	public static final String VERSION = MinecraftForge.MC_VERSION + "-@VERSION@";
+	public static final String VERSION = "@VERSION@";
 	
-	@Mod.Instance(MOD_ID)
-	public static Permafrost instance;
-	
-	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
-	
-	public static boolean isDev = (Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
-	
-	@Mod.EventHandler
-	public void onFingerprintViolation(FMLFingerprintViolationEvent event)
+	public Permafrost()
 	{
-		LOGGER.warn("Invalid fingerprint detected! The file " + event.getSource().getName() + " may have been tampered with. This version will NOT be supported by the author!");
+		super(new ModMetadata());
+		ModMetadata metadata = getMetadata();
+		metadata.modId = MOD_ID;
+		metadata.name = MOD_NAME;
+		metadata.version = VERSION;
+		metadata.authorList = Collections.singletonList("Virtuoel");
+		metadata.description = "Prevents light from melting Ice and Snow Layers";
+		metadata.screenshots = new String[0];
 	}
 	
-	@EventHandler
+	@Override
+	public boolean registerBus(EventBus bus, LoadController controller)
+	{
+		bus.register(this);
+		return true;
+	}
+	
+	@Subscribe
 	public void postInit(FMLPostInitializationEvent event)
 	{
 		Blocks.ICE.setTickRandomly(false);
