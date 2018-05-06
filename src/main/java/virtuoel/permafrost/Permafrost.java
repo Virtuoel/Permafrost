@@ -1,7 +1,5 @@
 package virtuoel.permafrost;
 
-import java.util.Collections;
-
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
@@ -24,7 +22,7 @@ public class Permafrost extends DummyModContainer
 		metadata.modId = MOD_ID;
 		metadata.name = MOD_NAME;
 		metadata.version = VERSION;
-		metadata.authorList = Collections.singletonList("Virtuoel");
+		metadata.authorList.add("Virtuoel");
 		metadata.description = "Prevents light from melting Ice and Snow Layers";
 		metadata.screenshots = new String[0];
 	}

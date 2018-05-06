@@ -27,7 +27,7 @@ public class ClassTransformer implements IClassTransformer
 	{
 		if(TRANSFORMATIONS.containsKey(transformedName))
 		{
-			System.out.println("Transforming Class [" + transformedName + "]");
+			LoadingPlugin.LOGGER.info("Transforming Class [" + transformedName + "]");
 			try
 			{
 				ClassNode classNode = new ClassNode();
