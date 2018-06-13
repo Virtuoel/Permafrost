@@ -38,7 +38,6 @@ minecraft {
 	runDir = "run"
 	mappings = "${mcp_mappings}"
 	makeObfSourceJar = true
-	useDepAts = true
 	
 	replace '@VERSION@', project.version
 	
@@ -98,8 +97,8 @@ task deobfJar(type: Jar) {
 		"Implementation-Title": project.name + '-deobf',
 		"Implementation-Version": project.version,
 		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:deobf",
-		"Built-On": "${mc_version}-${forge_version}",
-		"FMLAT": "${project.mod_name}_at.cfg",
+		"Built-On": "${project.mc_version}-${project.forge_version}",
+		"FMLAT": "${project.mod_id}_at.cfg",
 		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
 	)
 	classifier = 'deobf'
@@ -110,22 +109,24 @@ task signDeobfJar(type: SignJar) {
 		project.hasProperty('keyStore')
 	}
 	
-	keyStore = project.findProperty('keyStore')
-	alias = project.findProperty('keyStoreAlias')
-	storePass = project.findProperty('keyStorePass')
-	keyPass = project.findProperty('keyStoreKeyPass')
-	
-	inputFile = deobfJar.archivePath
-	outputFile = deobfJar.archivePath
+	if(project.hasProperty('keyStore')) {
+		keyStore = project.findProperty('keyStore')
+		alias = project.findProperty('keyStoreAlias')
+		storePass = project.findProperty('keyStorePass')
+		keyPass = project.findProperty('keyStoreKeyPass')
+		
+		inputFile = jar.archivePath
+		outputFile = jar.archivePath
+	}
 }
 
 jar {
 	manifest.mainAttributes(
 		"Implementation-Title": project.name,
-		"Implementation-Version": "${project.version}",
-		"Built-On": "${project.mc_version}-${project.forge_version}",
+		"Implementation-Version": project.version,
 		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}",
-		"FMLAT": "${project.mod_name}_at.cfg",
+		"Built-On": "${project.mc_version}-${project.forge_version}",
+		"FMLAT": "${project.mod_id}_at.cfg",
 		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
 	)
 	classifier '' //this is the main jar!
@@ -136,13 +137,15 @@ task signJar(type: SignJar, dependsOn: reobfJar) {
 		project.hasProperty('keyStore')
 	}
 	
-	keyStore = project.findProperty('keyStore')
-	alias = project.findProperty('keyStoreAlias')
-	storePass = project.findProperty('keyStorePass')
-	keyPass = project.findProperty('keyStoreKeyPass')
-	
-	inputFile = jar.archivePath
-	outputFile = jar.archivePath
+	if(project.hasProperty('keyStore')) {
+		keyStore = project.findProperty('keyStore')
+		alias = project.findProperty('keyStoreAlias')
+		storePass = project.findProperty('keyStorePass')
+		keyPass = project.findProperty('keyStoreKeyPass')
+		
+		inputFile = jar.archivePath
+		outputFile = jar.archivePath
+	}
 }
 
 artifacts {
@@ -183,11 +186,8 @@ processResources
 	
 	// copy everything else, thats not the mcmod.info
 	from(sourceSets.main.resources.srcDirs) {
-		exclude 'mcmod.info'		
+		exclude 'mcmod.info'
 	}
-	
-	//ATs
-	rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
 task curseforge {
