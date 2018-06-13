@@ -99,7 +99,7 @@ task deobfJar(type: Jar) {
 		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:deobf",
 		"Built-On": "${project.mc_version}-${project.forge_version}",
 		"FMLAT": "${project.mod_id}_at.cfg",
-		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
+	//	"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin",
 	)
 	classifier = 'deobf'
 }
@@ -127,7 +127,7 @@ jar {
 		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}",
 		"Built-On": "${project.mc_version}-${project.forge_version}",
 		"FMLAT": "${project.mod_id}_at.cfg",
-		"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin"
+	//	"FMLCorePlugin": "virtuoel.${mod_id}.asm.LoadingPlugin",
 	)
 	classifier '' //this is the main jar!
 }
