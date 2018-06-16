@@ -102,7 +102,7 @@ task apiJar(type: Jar) {
 		"Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
 		"Implementation-Title": project.name + '-api',
 		"Implementation-Version": project.version,
-		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:api",
+		"Maven-Artifact": "${project.group}:${project.archivesBaseName}:${project.version}:api",
 		"Built-On": "${project.mc_version}-${project.forge_version}"
 	)
 	classifier = 'api'
@@ -114,7 +114,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 		"Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})",
 		"Implementation-Title": project.name + '-javadoc',
 		"Implementation-Version": project.version,
-		"Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:javadoc",
+		"Maven-Artifact": "${project.group}:${project.archivesBaseName}:${project.version}:javadoc",
 		"Built-On": "${project.mc_version}-${project.forge_version}"
 	)
 	classifier = 'javadoc'
@@ -126,7 +126,7 @@ task deobfJar(type: Jar) {
 		attributes "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})"
 		attributes "Implementation-Title": project.name + '-deobf'
 		attributes "Implementation-Version": project.version
-		attributes "Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:deobf"
+		attributes "Maven-Artifact": "${project.group}:${project.archivesBaseName}:${project.version}:deobf"
 		attributes "Built-On": "${project.mc_version}-${project.forge_version}"
 		attributes "FMLAT": "${project.mod_id}_at.cfg"
 		if(project.hasProperty('core_plugin')) {
@@ -165,7 +165,7 @@ task coreJar(type: Jar) {
 			attributes "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})"
 			attributes "Implementation-Title": project.name + '-corePlugin'
 			attributes "Implementation-Version": project.version
-			attributes "Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}:corePlugin"
+			attributes "Maven-Artifact": "${project.group}:${project.archivesBaseName}:${project.version}:corePlugin"
 			attributes "Built-On": "${project.mc_version}-${project.forge_version}"
 			attributes "FMLAT": "${project.mod_id}_at.cfg"
 			attributes "FMLCorePlugin": project.core_plugin
@@ -218,7 +218,7 @@ jar {
 		attributes "Built-On-Java": "${System.getProperty('java.vm.version')} + (${System.getProperty('java.vm.vendor')})"
 		attributes "Implementation-Title": project.name
 		attributes "Implementation-Version": project.version
-		attributes "Maven-Artifact":"${project.group}:${project.archivesBaseName}:${project.version}"
+		attributes "Maven-Artifact": "${project.group}:${project.archivesBaseName}:${project.version}"
 		attributes "Built-On": "${project.mc_version}-${project.forge_version}"
 		attributes "FMLAT": "${project.mod_id}_at.cfg"
 		if(project.hasProperty('core_plugin')) {

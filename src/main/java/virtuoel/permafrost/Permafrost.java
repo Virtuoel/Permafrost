@@ -3,7 +3,6 @@ package virtuoel.permafrost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -13,13 +12,17 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldProviderSurface;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import virtuoel.permafrost.reference.PermafrostConfig;
 
+@Mod.EventBusSubscriber(modid = Permafrost.MOD_ID)
 @Mod(modid = Permafrost.MOD_ID, version = "@VERSION@", acceptableRemoteVersions = "*", certificateFingerprint = "@FINGERPRINT@")
 public class Permafrost
 {
@@ -30,52 +33,41 @@ public class Permafrost
 	@Mod.EventHandler
 	public void onFingerprintViolation(FMLFingerprintViolationEvent event)
 	{
-		LOGGER.error("Expecting signature {}, however there is no signature matching that description", event.getExpectedFingerprint());
+		LOGGER.error("Expecting signature {}, however there is no signature matching that description. The file {} may have been tampered with. This version will NOT be supported by the author!", event.getExpectedFingerprint(), event.getSource().getName());
 	}
 	
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event)
+	public void init(FMLInitializationEvent event)
 	{
-		Blocks.ICE.setTickRandomly(false);
-		Blocks.SNOW_LAYER.setTickRandomly(false);
-		
-		MinecraftForge.EVENT_BUS.register(this);
+		Blocks.ICE.setTickRandomly(PermafrostConfig.iceMelting);
+		Blocks.SNOW_LAYER.setTickRandomly(PermafrostConfig.snowLayerMelting);
 	}
 	
 	@SubscribeEvent
-	public void onWorldLoad(WorldEvent.Load event)
+	public static void onWorldLoad(WorldEvent.Load event)
 	{
-		if(event.getWorld().provider.getDimensionType() == DimensionType.OVERWORLD)
+		if(PermafrostConfig.replaceProvider && event.getWorld().provider.getDimensionType() == DimensionType.OVERWORLD)
 		{
 			WorldProvider provider = new WorldProviderSurface()
 			{
 				@Override
 				public boolean canBlockFreeze(BlockPos pos, boolean noWaterAdj)
 				{
-					if(world.getBiome(pos).getTemperature(pos) >= 0.15F)
+					if(!PermafrostConfig.iceFormingInLight)
 					{
-						return false;
+						return super.canBlockFreeze(pos, noWaterAdj);
 					}
-					else if(pos.getY() >= 0 && pos.getY() < 256)
+					else if(world.getBiome(pos).getTemperature(pos) < 0.15F && pos.getY() >= 0 && pos.getY() < 256)
 					{
-						IBlockState iblockstate1 = world.getBlockState(pos);
-						Block block = iblockstate1.getBlock();
+						IBlockState state = world.getBlockState(pos);
 						
-						if((block == Blocks.WATER || block == Blocks.FLOWING_WATER) && ((Integer) iblockstate1.getValue(BlockLiquid.LEVEL)).intValue() == 0)
+						if(state.getBlock() == Blocks.WATER && state.getValue(BlockLiquid.LEVEL) == 0)
 						{
-							if(!noWaterAdj)
-							{
-								return true;
-							}
-							
-							if(world.getBlockState(pos.north()).getMaterial() != Material.WATER ||
-								world.getBlockState(pos.south()).getMaterial() != Material.WATER ||
-								world.getBlockState(pos.east()).getMaterial() != Material.WATER ||
-								world.getBlockState(pos.west()).getMaterial() != Material.WATER
-							)
-							{
-								return true;
-							}
+							return !noWaterAdj ||
+							       world.getBlockState(pos.north()).getMaterial() != Material.WATER ||
+							       world.getBlockState(pos.south()).getMaterial() != Material.WATER ||
+							       world.getBlockState(pos.east()).getMaterial() != Material.WATER ||
+							       world.getBlockState(pos.west()).getMaterial() != Material.WATER;
 						}
 					}
 					return false;
@@ -84,6 +76,10 @@ public class Permafrost
 				@Override
 				public boolean canSnowAt(BlockPos pos, boolean checkLight)
 				{
+					if(!PermafrostConfig.snowLayerFormingInLight)
+					{
+						return super.canSnowAt(pos, checkLight);
+					}
 					if(world.getBiome(pos).getTemperature(pos) >= 0.15F)
 					{
 						return false;
@@ -94,12 +90,9 @@ public class Permafrost
 					}
 					else if(pos.getY() >= 0 && pos.getY() < 256)
 					{
-						IBlockState iblockstate1 = world.getBlockState(pos);
+						IBlockState state = world.getBlockState(pos);
 						
-						if(iblockstate1.getBlock().isAir(iblockstate1, world, pos) && Blocks.SNOW_LAYER.canPlaceBlockAt(world, pos))
-						{
-							return true;
-						}
+						return state.getBlock().isAir(state, world, pos) && Blocks.SNOW_LAYER.canPlaceBlockAt(world, pos);
 					}
 					
 					return false;
@@ -111,6 +104,18 @@ public class Permafrost
 			provider.setWorld(world);
 			provider.setDimension(world.provider.getDimension());
 			world.provider = provider;
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onConfigChanged(OnConfigChangedEvent event)
+	{
+		if(event.getModID().equals(Permafrost.MOD_ID))
+		{
+			ConfigManager.sync(Permafrost.MOD_ID, Config.Type.INSTANCE);
+			
+			Blocks.ICE.setTickRandomly(PermafrostConfig.iceMelting);
+			Blocks.SNOW_LAYER.setTickRandomly(PermafrostConfig.snowLayerMelting);
 		}
 	}
 }
