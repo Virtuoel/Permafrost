@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "permafrost",
+	"name": "Permafrost",
+	"version": "${version}",
+	"side": "universal",
+	"description": "Fabric mod that prevents light from melting Ice and Snow Layers.",
+	"license": "MIT",
+	"contact":
+	{
+		"homepage": "https://minecraft.curseforge.com/projects/permafrost",
+		"issues": "https://github.com/Virtuoel/Permafrost/issues",
+		"sources": "https://github.com/Virtuoel/Permafrost"
+	},
+	"authors":
+	[
+		"Virtuoel"
+	],
+	"requires":
+	{
+		"fabricloader": ">=0.4.0",
+		"fabric": "*"
+	},
+	"icon": "assets/permafrost/icon.png",
+	"environment": "*",
+	"entrypoints":
+	{
+		"main":
+		[
+			"virtuoel.permafrost.Permafrost"
+		],
+		"client":
+		[
+			
+		]
+	},
+	"mixins":
+	[
+		"permafrost.mixins.json"
+	]
+}

@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "virtuoel.permafrost.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"mixins":
+	[
+		"BiomeMixin",
+		"BlocksMixin"
+	],
+	"injectors":
+	{
+		"defaultRequire": 1
+	}
+}
