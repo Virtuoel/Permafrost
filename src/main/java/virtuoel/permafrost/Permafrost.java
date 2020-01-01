@@ -4,8 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.util.Identifier;
+import net.minecraft.block.Blocks;
 import virtuoel.permafrost.api.PermafrostConfig;
+import virtuoel.permafrost.mixin.BlockAccessor;
 
 public class Permafrost implements ModInitializer
 {
@@ -13,19 +14,17 @@ public class Permafrost implements ModInitializer
 	
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 	
-	public Permafrost()
-	{
-		PermafrostConfig.DATA.getClass();
-	}
-	
 	@Override
 	public void onInitialize()
 	{
+		if(!PermafrostConfig.DATA.get("snowLayerMelting").getAsBoolean())
+		{
+			((BlockAccessor) Blocks.SNOW).setRandomTicks(false);
+		}
 		
-	}
-	
-	public static Identifier id(String name)
-	{
-		return new Identifier(MOD_ID, name);
+		if(!PermafrostConfig.DATA.get("iceMelting").getAsBoolean())
+		{
+			((BlockAccessor) Blocks.ICE).setRandomTicks(false);
+		}
 	}
 }
