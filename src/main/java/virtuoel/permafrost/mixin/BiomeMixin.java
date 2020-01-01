@@ -13,13 +13,13 @@ import virtuoel.permafrost.api.PermafrostConfig;
 @Mixin(Biome.class)
 public abstract class BiomeMixin
 {
-	@Redirect(method = "canSetIce(Lnet/minecraft/world/WorldView;Lnet/minecraft/util/math/BlockPos;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/ViewableWorld;getLightLevel(Lnet/minecraft/world/LightType;Lnet/minecraft/util/math/BlockPos;)I"))
+	@Redirect(method = "canSetIce(Lnet/minecraft/world/WorldView;Lnet/minecraft/util/math/BlockPos;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldView;getLightLevel(Lnet/minecraft/world/LightType;Lnet/minecraft/util/math/BlockPos;)I"))
 	private int canSetIceGetLightLevelProxy(WorldView obj, LightType var1, BlockPos var2)
 	{
 		return PermafrostConfig.DATA.get("iceFormingInLight").getAsBoolean() ? 0 : obj.getLightLevel(var1, var2);
 	}
 	
-	@Redirect(method = "canSetSnow(Lnet/minecraft/world/WorldView;Lnet/minecraft/util/math/BlockPos;Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/ViewableWorld;getLightLevel(Lnet/minecraft/world/LightType;Lnet/minecraft/util/math/BlockPos;)I"))
+	@Redirect(method = "canSetSnow(Lnet/minecraft/world/WorldView;Lnet/minecraft/util/math/BlockPos;Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldView;getLightLevel(Lnet/minecraft/world/LightType;Lnet/minecraft/util/math/BlockPos;)I"))
 	private int canSetSnowGetLightLevelProxy(WorldView obj, LightType var1, BlockPos var2)
 	{
 		return PermafrostConfig.DATA.get("snowLayerFormingInLight").getAsBoolean() ? 0 : obj.getLightLevel(var1, var2);
